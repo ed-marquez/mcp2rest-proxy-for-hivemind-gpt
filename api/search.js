@@ -14,8 +14,8 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream",
-        "Prefer": "return=representation"
+        "Accept": "application/json",              // <-- Drop SSE accept
+        "Prefer": "return=representation"          // <-- Ask for non-stream
       },
       body: JSON.stringify({
         jsonrpc: "2.0",
@@ -23,13 +23,24 @@ export default async function handler(req, res) {
         method: "tools/call",
         params: {
           name: "SearchHedera",
-          arguments: { query }
+          arguments: { query },
+          stream: false                            // <-- Force JSON mode
         }
       })
     });
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    const text = await response.text();
+
+    // Try to parse into JSON
+    try {
+      const json = JSON.parse(text);
+      return res.status(200).json(json);
+    } catch (err) {
+      return res.status(500).json({
+        error: "Invalid JSON returned from MCP server",
+        raw: text
+      });
+    }
 
   } catch (error) {
     return res.status(500).json({
