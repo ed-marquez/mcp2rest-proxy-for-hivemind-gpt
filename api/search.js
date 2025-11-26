@@ -18,6 +18,8 @@ export default async function handler(req, res) {
         "Prefer": "return=representation"
       },
       body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "1",
         method: "tools/call",
         params: {
           name: "SearchHedera",
